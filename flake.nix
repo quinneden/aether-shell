@@ -5,41 +5,17 @@
     nixpkgs.url = "github:nixos/nixpkgs?ref=nixos-unstable";
   };
 
-  outputs =
-    { self, nixpkgs }:
-    let
-      forAllSystems =
-        function:
-        nixpkgs.lib.genAttrs
-          [
-            "aarch64-linux"
-            "x86_64-linux"
-            "aarch64-darwin"
-            "x86_64-darwin"
-          ]
-          (
-            system:
-            function (
-              import nixpkgs {
-                inherit system;
-                config.allowUnfree = true;
-              }
-            )
-          );
+  outputs = { self, nixpkgs }: let
+    system = "aarch64-linux";
 
-      pkgs = forAllSystems (
-        system:
-        import nixpkgs {
-          inherit system;
-          config.allowUnfree = true;
-          overlays = import ./nix/overlays.nix;
-        }
-      );
-    in
-    {
-      homeManagerModules = {
-        aetherShell = import ./nix/hm.nix { inherit pkgs; };
-        default = self.homeManagerModules.aetherShell;
-      };
+    pkgs = import nixpkgs {
+      inherit system;
+      overlays = import ./nix/overlays.nix;
     };
+  in {
+    homeManagerModules = {
+      aetherShell = import ./nix/hm.nix {inherit pkgs;};
+      default = self.homeManagerModules.aetherShell;
+    };
+  };
 }
